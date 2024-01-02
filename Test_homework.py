@@ -6,6 +6,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec 
 import openpyxl
 import globalConstants as c
+import json
 
 
 
@@ -32,6 +33,29 @@ class Test_homework:
             data.append((username,password))
 
         return data
+      
+    def readInvalidDataFromJson():
+        file = open("data/invalidLogin.json") 
+        data = json.load(file)
+        parameter = []
+
+        for user in data['users']:
+            username = user["username"]
+            password = user["password"]
+            parameter.append((username,password))
+
+        return parameter
+    
+    @pytest.mark.parametrize("username,password",readInvalidDataFromJson())
+    def test_invalid_login(self,username,password):
+        usernameInput = WebDriverWait(self.driver,5).until(ec.visibility_of_element_located((By.ID,c.USERNAME_ID)))
+        usernameInput.send_keys(username)
+        passwordInput = WebDriverWait(self.driver,5).until(ec.visibility_of_element_located((By.ID,c.PASSWORD_ID)))
+        passwordInput.send_keys(password)
+        loginButton = self.driver.find_element(By.ID,c.LOGIN_BUTTON_ID)
+        loginButton.click()
+        errorMessage = self.driver.find_element(By.XPATH,c.ERROR_MESSAGE_XPATH)
+        assert errorMessage.text == c.USERNAME_PASSWORD_DONT_MATCH
 
     def test_invalid_login(self):
         #-Kullanıcı adı ve şifre alanları boş geçildiğinde uyarı mesajı olarak "Epic sadface: Username is required" gösterilmelidir.
